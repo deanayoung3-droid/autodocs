@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/docs-agent.svg" width="96" alt="Docs Agent, the retriever who keeps your help center up to date">
+</p>
+
 # AutoDocs
 
 **A help center that keeps itself up to date.** AutoDocs is a self-hosted help center plus an AI docs agent. When a pull request merges, the agent decides whether customers will notice, reads the code, and drafts the article changes (with fresh screenshots of your product, red boxes around the controls it describes). You review each change as a diff, edit it if you like, and publish. Nothing publishes on its own.
