@@ -21,7 +21,6 @@ import {
   IconUser,
   IconUsers,
   IconWidget,
-  IconChat,
 } from "@/components/icons";
 
 type Item = { href: string; label: string; icon: ReactNode; exact?: boolean; badge?: number; tone?: "accent" | "you" };
