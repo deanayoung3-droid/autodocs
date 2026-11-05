@@ -1,0 +1,1115 @@
+@import "tailwindcss";
+
+/* A white canvas, a rail one step darker, hairline borders, flat cards, gray body copy, and buttons
+   with a soft top-to-bottom face. The hues: cool grays, navy-black ink, and one purple accent
+   (changeable in Settings) for actions and selection. Light theme only. */
+:root {
+  /* Surfaces, lightest to darkest */
+  --surface: #ffffff;
+  --sunken: #f9f9fb;
+  --ground: #f4f5f7;
+  --well: #eff0f3;
+  --hover: var(--well);
+  /* Ink, darkest to lightest */
+  --ink-strong: #0a0d12;
+  --ink: #181d27;
+  --graphite: #414651;
+  --muted: #646873;
+  --faint: #8d919a;
+  --placeholder: #a4a7ae;
+  /* Lines */
+  --line-soft: #eff0f2;
+  --line: #e6e7ea;
+  --line-strong: #d5d7da;
+  /* Accent */
+  --accent: #7f56d9;
+  --accent-ink: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 10%, white);
+  --accent-line: color-mix(in oklab, var(--accent) 30%, white);
+  --accent-strong: color-mix(in oklab, var(--accent) 80%, black);
+  /* States: ok and new are green, waiting-on-you is orange, danger is red */
+  --success: #067647;
+  --success-soft: #ecfdf3;
+  --success-line: #abefc6;
+  --ok-dot: #17b26a;
+  --you: #ef6820;
+  --you-soft: #fef6ee;
+  --you-strong: #b93815;
+  --warn-soft: #fffaeb;
+  --warn-line: #fedf89;
+  --warn-strong: #b54708;
+  --danger: #d92d20;
+  --danger-soft: #fef3f2;
+  --danger-line: #fecdca;
+  --danger-strong: #b42318;
+  --add-bg: #ecfdf3;
+  --add-ink: #067647;
+  --del-bg: #fef3f2;
+  --del-ink: #b42318;
+  --hit: #fef7c3;
+  --code-bg: #0a0d12;
+  /* Depth: cards are flat; menus and dialogs float */
+  --shadow-xs: 0 1px 0 var(--line);
+  --shadow-sm: 0 1px 0 var(--line);
+  --shadow-inset: inset 0 1px 2px rgb(10 13 18 / 0.05);
+  --shadow-md: 0 1px 0 var(--line), 0 12px 30px rgb(10 13 18 / 0.12);
+  --shadow-lg: 0 1px 0 var(--line), 0 12px 30px rgb(10 13 18 / 0.12);
+  --shadow-pop: 0 0 0 1px rgb(10 13 18 / 0.08), 0 24px 60px rgb(10 13 18 / 0.16);
+  /* Button faces */
+  --btn-primary-bg: linear-gradient(180deg, color-mix(in oklab, var(--accent) 88%, white) 0%, var(--accent) 100%);
+  --btn-primary-border: color-mix(in oklab, var(--accent) 78%, black);
+  --btn-primary-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 0 color-mix(in oklab, var(--accent) 62%, black), 0 2px 4px rgb(10 13 18 / 0.08);
+  --btn-secondary-bg: linear-gradient(180deg, #ffffff 0%, #f1f2f4 100%);
+  --btn-secondary-border: #d5d7da;
+  --btn-secondary-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 1px 0 #c5c8ce, 0 2px 4px rgb(10 13 18 / 0.08);
+  --btn-ink-bg: linear-gradient(180deg, #252b37 0%, #181d27 100%);
+  --btn-ink-border: #0a0d12;
+  --btn-ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 0 #05070a, 0 2px 4px rgb(10 13 18 / 0.08);
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in oklab, var(--accent) 70%, white);
+  --dur: 120ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+@theme inline {
+  --text-2xs: 11px;
+  --text-2xs--line-height: 1.2;
+  --text-xs: 12px;
+  --text-xs--line-height: 1.3;
+  --text-sm: 13px;
+  --text-sm--line-height: 1.4;
+  --text-base: 14px;
+  --text-base--line-height: 1.4;
+  --text-lg: 16px;
+  --text-lg--line-height: 1.45;
+  --text-xl: 19px;
+  --text-xl--line-height: 1.4;
+  --radius: 6px;
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-well: var(--well);
+  --color-hover: var(--hover);
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-graphite: var(--graphite);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line-soft: var(--line-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-accent-strong: var(--accent-strong);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-strong: var(--danger-strong);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+  --color-warn-strong: var(--warn-strong);
+  --color-ok: var(--ok-dot);
+  --color-you: var(--you);
+  --color-you-soft: var(--you-soft);
+  --color-you-strong: var(--you-strong);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-display-stack);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-inter), -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-line);
+}
+
+/* In the base layer so components (like .field and .btn) can replace it with their own ring. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--accent) 70%, white);
+    outline-offset: 2px;
+  }
+}
+
+/* Motion. Enter animations use fill-mode `backwards` so no transform lingers afterwards. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Docs Agent: a blink every few seconds, a glance upward while thinking, a slow breath asleep. */
+@keyframes mascot-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  95%,
+  97% {
+    transform: scaleY(0.12);
+  }
+}
+@keyframes mascot-think {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30%,
+  70% {
+    transform: translate(1.5px, -2.5px);
+  }
+}
+@keyframes mascot-breathe {
+  50% {
+    transform: scale(1.03);
+  }
+}
+.mascot-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mascot-blink .mascot-eye {
+  animation: mascot-blink 4.6s var(--ease) infinite;
+}
+.mascot-think .mascot-eye {
+  animation: mascot-think 2.4s var(--ease) infinite;
+}
+.mascot-breathe {
+  transform-origin: 50% 100%;
+  animation: mascot-breathe 3s ease-in-out infinite;
+}
+
+@layer components {
+  .page-enter {
+    animation: rise 320ms var(--ease-out) backwards;
+  }
+  .rise {
+    animation: rise 380ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+  .fade-in {
+    animation: fade 240ms ease-out backwards;
+  }
+  .pop-in {
+    animation: pop 160ms var(--ease) backwards;
+  }
+
+  /* Page titles: one size across the admin. */
+  .title {
+    font-family: var(--font-display-stack);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  /* Card and section headings inside a page. */
+  .heading {
+    font-family: var(--font-display-stack);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  /* Help center headings: Petrona. */
+  .display {
+    font-family: var(--font-petrona), Georgia, serif;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  /* Small uppercase group labels: "Create an article", "Yesterday", "Workspace". */
+  .kicker {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .card-hover {
+    transition:
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+  .card-hover:hover {
+    border-color: var(--line-strong);
+    background: var(--sunken);
+  }
+  .card-hover:active {
+    transform: scale(0.99);
+  }
+  /* The bar at the bottom of a settings card that holds its save button. */
+  .card-footer {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--line);
+    background: var(--sunken);
+    padding: 10px 20px;
+  }
+
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid var(--btn-secondary-border);
+    background-color: #ffffff;
+    background-image: var(--btn-secondary-bg);
+    box-shadow: var(--btn-secondary-shadow);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      transform var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      filter var(--dur) var(--ease);
+  }
+  .btn:not(:disabled):hover {
+    filter: brightness(0.985);
+  }
+  .btn:not(:disabled):active {
+    transform: translateY(1px);
+    box-shadow: inset 0 1px rgb(255 255 255 / 0.15);
+  }
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    background-image: none;
+    background-color: var(--well);
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--muted);
+  }
+  .btn-sm {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .btn-icon {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+  }
+  .btn-primary {
+    background-image: var(--btn-primary-bg);
+    border-color: var(--btn-primary-border);
+    box-shadow: var(--btn-primary-shadow);
+    color: var(--accent-ink);
+  }
+  .btn-dark {
+    background-image: var(--btn-ink-bg);
+    border-color: var(--btn-ink-border);
+    box-shadow: var(--btn-ink-shadow);
+    color: #ffffff;
+  }
+  /* Destructive actions keep the ordinary face; only the label turns red. */
+  .btn-danger {
+    color: var(--danger-strong);
+  }
+  .btn-danger:not(:disabled):hover {
+    background-image: none;
+    background-color: var(--danger-soft);
+    filter: none;
+  }
+  .btn-quiet {
+    background-image: none;
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--graphite);
+  }
+  .btn-quiet:not(:disabled):hover {
+    background-color: var(--well);
+    filter: none;
+  }
+  .btn-quiet:not(:disabled):active {
+    box-shadow: none;
+    transform: none;
+  }
+  .btn-quiet:disabled {
+    background-color: transparent;
+    opacity: 0.5;
+  }
+
+  .field {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    box-shadow: var(--shadow-inset);
+    transition:
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+  textarea.field {
+    height: auto;
+    padding: 9px 12px;
+    line-height: 1.5;
+  }
+  .field::placeholder {
+    color: var(--faint);
+  }
+  .field:focus-visible,
+  .field:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--graphite);
+  }
+  .hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* A checkbox drawn as an on/off switch. */
+  .toggle {
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 30px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--line-strong, var(--line));
+    cursor: pointer;
+    transition: background-color var(--dur) var(--ease);
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+    transition: transform var(--dur) var(--ease);
+  }
+  .toggle:checked {
+    background: var(--accent);
+  }
+  .toggle:checked::after {
+    transform: translateX(12px);
+  }
+  .toggle:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .link {
+    color: var(--accent-strong);
+    font-weight: 500;
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+
+  .notice {
+    border: 1px solid var(--line);
+    background: var(--sunken);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--graphite);
+    animation: slide-down 240ms var(--ease-out) backwards;
+  }
+  .notice-error {
+    border-color: var(--danger-line);
+    background: var(--danger-soft);
+    color: var(--danger-strong);
+  }
+  .notice-accent {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  /* Status badges: a pale ground with dark ink of the same hue. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.25;
+    background: var(--well);
+    color: var(--graphite);
+    white-space: nowrap;
+  }
+  .chip-accent {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+  .chip-ok {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+  .chip-you {
+    background: var(--you-soft);
+    color: var(--you-strong);
+  }
+  .chip-danger {
+    background: var(--danger-soft);
+    color: var(--danger-strong);
+  }
+  /* Small counts beside a nav item. */
+  .count {
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    background: var(--you-soft);
+    color: var(--you-strong);
+  }
+
+  .skeleton {
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--sunken) 0%, var(--well) 50%, var(--sunken) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+
+  .working-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--accent);
+    animation: pulse-dot 1.2s ease-in-out infinite;
+  }
+  .ping {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: spin 700ms linear infinite;
+  }
+
+  .tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color var(--dur) var(--ease);
+  }
+  .tab:hover {
+    color: var(--ink);
+  }
+  .tab::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 200ms var(--ease-out);
+  }
+  .tab[aria-selected="true"],
+  .tab[aria-current="page"] {
+    color: var(--ink);
+  }
+  .tab[aria-selected="true"]::after,
+  .tab[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
+  /* A pill-shaped segmented control: Monthly / Annual, Changes / Preview / Edit. */
+  .segmented {
+    display: inline-flex;
+    gap: 2px;
+    border-radius: 6px;
+    background: var(--well);
+    padding: 2px;
+  }
+  .segmented > * {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    transition:
+      background-color var(--dur) var(--ease),
+      color var(--dur) var(--ease);
+  }
+  .segmented > *:hover {
+    color: var(--ink);
+  }
+  .segmented > [aria-pressed="true"],
+  .segmented > [aria-selected="true"],
+  .segmented > [aria-current="page"] {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 1px 0 var(--line);
+  }
+
+  /* The dotted canvas behind previews. */
+  .dots {
+    background-color: var(--surface);
+    background-image: radial-gradient(var(--line-strong) 0.75px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  .slim-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  mark,
+  .hit {
+    background: var(--hit);
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+}
+
+/* Rendered article bodies. */
+.prose-doc {
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: -0.005em;
+  color: var(--graphite);
+}
+.prose-doc > * + * {
+  margin-top: 1em;
+}
+.prose-doc h1,
+.prose-doc h2,
+.prose-doc h3,
+.prose-doc h4 {
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  margin-top: 1.9em;
+  scroll-margin-top: 80px;
+}
+.prose-doc h1,
+.prose-doc h2 {
+  font-family: var(--font-petrona), Georgia, serif;
+  font-size: 1.5em;
+  letter-spacing: -0.03em;
+}
+.prose-doc h3,
+.prose-doc h4 {
+  font-size: 1.08em;
+}
+.prose-doc a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur) var(--ease);
+}
+.prose-doc a:hover {
+  text-decoration-color: var(--accent);
+}
+.prose-doc strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.prose-doc ul,
+.prose-doc ol {
+  padding-left: 1.4em;
+}
+.prose-doc ul {
+  list-style: disc;
+}
+.prose-doc ol {
+  list-style: decimal;
+}
+.prose-doc li::marker {
+  color: var(--faint);
+}
+.prose-doc li + li {
+  margin-top: 0.4em;
+}
+.prose-doc code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.86em;
+  color: var(--ink);
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.12em 0.38em;
+}
+.prose-doc pre {
+  background: var(--code-bg);
+  color: #e9eaeb;
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.prose-doc pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.prose-doc blockquote {
+  border-left: 3px solid var(--accent-line);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  color: var(--graphite);
+}
+/* Callouts: "Note:", "Tip:", or "Warning:" quotes, styled as boxes with an icon. */
+.prose-doc blockquote.callout {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 16px 12px 42px;
+  background: var(--sunken);
+  color: var(--graphite);
+  font-size: 0.94em;
+}
+.prose-doc blockquote.callout::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--callout-icon) center / contain no-repeat;
+  mask: var(--callout-icon) center / contain no-repeat;
+}
+.prose-doc blockquote.callout strong:first-child {
+  color: var(--ink);
+}
+.prose-doc blockquote.callout-note {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5M12 7.5h.01'/%3E%3C/svg%3E");
+}
+.prose-doc blockquote.callout-note::before {
+  color: var(--accent);
+}
+.prose-doc blockquote.callout-tip {
+  border-color: var(--success-line);
+  background: var(--success-soft);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z'/%3E%3C/svg%3E");
+}
+.prose-doc blockquote.callout-tip::before {
+  color: var(--success);
+}
+.prose-doc blockquote.callout-warning {
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+  --callout-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 21 19H3z'/%3E%3Cpath d='M12 10v4M12 16.5h.01'/%3E%3C/svg%3E");
+}
+.prose-doc blockquote.callout-warning::before {
+  color: var(--warn-strong);
+}
+.prose-doc img {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+/* Collapsible questions, as in troubleshooting articles: <details><summary>…</summary>…</details>. */
+.prose-doc details {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 14px;
+  margin: 10px 0;
+}
+.prose-doc details[open] {
+  padding-bottom: 12px;
+}
+.prose-doc summary {
+  cursor: pointer;
+  padding: 10px 0;
+  font-weight: 500;
+  color: var(--ink);
+}
+.prose-doc summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* AI answer citations: small numbered links to the section the sentence came from. */
+.prose-doc a.cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  margin: 0 1px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface);
+  border: 1px solid var(--accent-line);
+  color: var(--accent-strong);
+  font-size: 0.72em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  vertical-align: 0.15em;
+}
+.prose-doc a.cite:hover {
+  border-color: var(--accent);
+}
+/* Answers in the Assistant panel: compact, quiet text, bold labels,
+   and citations as small grey tags. */
+.assistant-answer {
+  font-size: 14px;
+  line-height: 24px;
+  color: var(--graphite);
+  overflow-wrap: anywhere;
+}
+.assistant-answer > * + * {
+  margin-top: 12px;
+}
+.assistant-answer strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.assistant-answer h1,
+.assistant-answer h2,
+.assistant-answer h3,
+.assistant-answer h4 {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.assistant-answer ol {
+  list-style: decimal;
+  padding-left: 20px;
+}
+.assistant-answer ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.assistant-answer li {
+  padding-left: 6px;
+}
+.assistant-answer li + li {
+  margin-top: 2px;
+}
+.assistant-answer a:not(.cite) {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.assistant-answer a.cite {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  margin-left: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--well);
+  color: var(--graphite);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 11px;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  vertical-align: 1px;
+}
+.assistant-answer a.cite:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+.assistant-answer code {
+  border-radius: 4px;
+  background: var(--sunken);
+  padding: 1px 4px;
+  font-size: 12.5px;
+}
+.assistant-answer img {
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.prose-doc table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.prose-doc th,
+.prose-doc td {
+  border: 1px solid var(--line);
+  padding: 7px 11px;
+  text-align: left;
+}
+.prose-doc th {
+  background: var(--sunken);
+  color: var(--ink);
+  font-weight: 600;
+}
+.prose-doc hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.prose-doc > :first-child {
+  margin-top: 0;
+}
+.prose-compact {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* The inline article editor: the same document styles, plus editing affordances. */
+.rich-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--faint);
+  pointer-events: none;
+}
+.rich-editor .tableWrapper {
+  overflow-x: auto;
+}
+.rich-editor table {
+  display: table;
+  width: 100%;
+}
+.rich-editor .selectedCell {
+  background: var(--accent-soft);
+}
+.rich-editor img.ProseMirror-selectednode {
+  outline: 2px solid var(--accent);
+}
+.rich-editor a {
+  cursor: text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* The dark color scheme, for the widget (Widget → Branding) and the help center (Customize →
+   Branding, or the reader's own choice). Dark always, or only when the visitor's system is dark.
+   The accent stays; surfaces, ink, lines, and the callout colors change. */
+[data-scheme="dark"] {
+  --surface: #121419;
+  --sunken: #181b21;
+  --ground: #0d0f13;
+  --well: #22262e;
+  --ink-strong: #ffffff;
+  --ink: #eef0f3;
+  --graphite: #c3c7ce;
+  --muted: #959aa4;
+  --faint: #737885;
+  --placeholder: #6b707c;
+  --line-soft: #1f232a;
+  --line: #2a2f38;
+  --line-strong: #3a404b;
+  --accent-soft: color-mix(in oklab, var(--accent) 18%, #121419);
+  --accent-line: color-mix(in oklab, var(--accent) 40%, #121419);
+  --accent-strong: color-mix(in oklab, var(--accent) 70%, white);
+  --shadow-inset: none;
+  --shadow-md: 0 0 0 1px var(--line), 0 12px 30px rgb(0 0 0 / 0.4);
+  --btn-secondary-bg: linear-gradient(180deg, #262a32 0%, #1e2128 100%);
+  --btn-secondary-border: #3a404b;
+  --btn-secondary-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 #05070a;
+  --success: #47cd89;
+  --success-soft: #0f241a;
+  --success-line: #1d4a33;
+  --warn-soft: #261d0c;
+  --warn-line: #574114;
+  --warn-strong: #f5b041;
+  --danger: #f97066;
+  --danger-soft: #2a1414;
+  --danger-line: #5e2222;
+  --danger-strong: #fda29b;
+  --hit: #4d4413;
+  --code-bg: #07090c;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  [data-scheme="system"] {
+    --surface: #121419;
+    --sunken: #181b21;
+    --ground: #0d0f13;
+    --well: #22262e;
+    --ink-strong: #ffffff;
+    --ink: #eef0f3;
+    --graphite: #c3c7ce;
+    --muted: #959aa4;
+    --faint: #737885;
+    --placeholder: #6b707c;
+    --line-soft: #1f232a;
+    --line: #2a2f38;
+    --line-strong: #3a404b;
+    --accent-soft: color-mix(in oklab, var(--accent) 18%, #121419);
+    --accent-line: color-mix(in oklab, var(--accent) 40%, #121419);
+    --accent-strong: color-mix(in oklab, var(--accent) 70%, white);
+    --shadow-inset: none;
+    --shadow-md: 0 0 0 1px var(--line), 0 12px 30px rgb(0 0 0 / 0.4);
+    --btn-secondary-bg: linear-gradient(180deg, #262a32 0%, #1e2128 100%);
+    --btn-secondary-border: #3a404b;
+    --btn-secondary-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 #05070a;
+    --success: #47cd89;
+    --success-soft: #0f241a;
+    --success-line: #1d4a33;
+    --warn-soft: #261d0c;
+    --warn-line: #574114;
+    --warn-strong: #f5b041;
+    --danger: #f97066;
+    --danger-soft: #2a1414;
+    --danger-line: #5e2222;
+    --danger-strong: #fda29b;
+    --hit: #4d4413;
+    --code-bg: #07090c;
+    color-scheme: dark;
+  }
+}
+
+/* Behind a dark help center too, so scrolling past the ends doesn't flash white. */
+html:has(.help-root[data-scheme="dark"]) {
+  background: #121419;
+}
+@media (prefers-color-scheme: dark) {
+  html:has(.help-root[data-scheme="system"]) {
+    background: #121419;
+  }
+}

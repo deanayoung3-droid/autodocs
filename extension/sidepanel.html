@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Docs Agent</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="top">
+      <img class="avatar" src="icons/48.png" alt="" width="28" height="28" />
+      <div class="who">
+        <strong class="agent-name">Docs Agent</strong>
+        <span class="workspace muted"></span>
+      </div>
+      <button type="button" class="icon-btn" id="open-settings" aria-label="Settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4" />
+          <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+        </svg>
+      </button>
+    </header>
+
+    <main id="loading" class="center muted">Loading…</main>
+
+    <main id="signed-out" class="center" hidden>
+      <img src="icons/128.png" alt="" width="64" height="64" />
+      <h1>Sign in to use <span class="agent-name">Docs Agent</span></h1>
+      <p class="muted">Signs in with your <span class="product">AutoDocs</span> account at <span class="origin"></span>.</p>
+      <button type="button" class="btn primary" id="sign-in">Sign in</button>
+      <p class="muted small" id="waiting" hidden>Finish signing in on the tab that opened. This panel updates by itself.</p>
+    </main>
+
+    <main id="app" hidden>
+      <nav class="tabs" role="tablist" aria-label="Docs Agent">
+        <button type="button" role="tab" id="tab-chat" aria-controls="panel-chat" aria-selected="true">Chat</button>
+        <button type="button" role="tab" id="tab-search" aria-controls="panel-search" aria-selected="false" tabindex="-1">Search</button>
+        <button type="button" role="tab" id="tab-tasks" aria-controls="panel-tasks" aria-selected="false" tabindex="-1">Tasks</button>
+      </nav>
+
+      <section id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" class="chat">
+        <ol id="messages" aria-live="polite"></ol>
+        <form id="ask-form" class="composer">
+          <label class="sr-only" for="question">Ask Docs Agent</label>
+          <textarea id="question" rows="3" placeholder="Ask about your product, or describe a docs change…" required></textarea>
+          <div class="composer-row">
+            <label class="check"><input type="checkbox" id="use-page" checked /> Use this page</label>
+            <span class="grow"></span>
+            <button type="button" class="btn" id="make-task">Make it a docs task</button>
+            <button type="submit" class="btn primary">Ask</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="panel-search" role="tabpanel" aria-labelledby="tab-search" hidden>
+        <div class="search-box">
+          <label class="sr-only" for="search">Search the help center</label>
+          <input id="search" type="search" placeholder="Search the help center" autocomplete="off" />
+        </div>
+        <ul id="results" class="list"></ul>
+      </section>
+
+      <section id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks" hidden>
+        <ul id="tasks" class="list"></ul>
+      </section>
+    </main>
+
+    <main id="settings" hidden>
+      <button type="button" class="link back" id="close-settings">← Back</button>
+      <h1>Settings</h1>
+      <section class="setting">
+        <label for="reply-instructions"><strong>Reply drafting instructions</strong></label>
+        <p class="muted small">Docs Agent follows these when it drafts a reply with !!. For example: sign off as “The Acme team”, keep it under 120 words.</p>
+        <textarea id="reply-instructions" rows="4"></textarea>
+        <p class="muted small" id="saved-note" role="status"></p>
+      </section>
+      <section class="setting">
+        <strong>Where !! is off</strong>
+        <p class="muted small">The !! popover stays out of the way on these sites.</p>
+        <ul id="off-sites" class="chips"></ul>
+        <button type="button" class="btn" id="turn-off-here">Turn off on this site</button>
+      </section>
+      <section class="setting">
+        <strong>Chat</strong>
+        <p class="muted small">Your chat stays in this browser.</p>
+        <button type="button" class="btn" id="clear-chat">Clear chat</button>
+      </section>
+      <section class="setting">
+        <strong>Account</strong>
+        <p class="muted small"><span id="account"></span> at <span class="origin"></span></p>
+        <button type="button" class="btn danger" id="sign-out">Sign out of this browser</button>
+      </section>
+      <p class="muted small">Shortcuts: Alt+F opens this panel. Type !! in any reply box. Right-click selected text to ask about it.</p>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+# AutoDocs with its own Postgres (with pgvector). Uploaded images are kept on a volume.
+#
+#   npm run setup -- --docker      # or: cp .env.example .env and fill in the required values
+#   docker compose up -d --build   # then open http://localhost:3000
+#
+# On a server with a domain pointed at it, add automatic HTTPS (Caddy gets the certificate):
+#   set DOMAIN=docs.example.com and PUBLIC_URL=https://docs.example.com in .env, then
+#   docker compose --profile https up -d --build
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autodocs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-autodocs}
+      POSTGRES_DB: autodocs
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autodocs -d autodocs"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    image: autodocs:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://autodocs:${POSTGRES_PASSWORD:-autodocs}@db:5432/autodocs
+    ports:
+      - "${PORT:-3000}:8080"
+    volumes:
+      - files:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 2g
+
+  # Only with --profile https: HTTPS for DOMAIN, with certificates from Let's Encrypt.
+  caddy:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  db-data:
+  files:
+  caddy-data:
+  caddy-config:

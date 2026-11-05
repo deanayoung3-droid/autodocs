@@ -1,0 +1,193 @@
+# Every push and pull request: lint, type-check, build the production image, and start it against a
+# real Postgres (with pgvector, like Cloud SQL) to prove it boots, migrates, and serves its pages.
+# Pushes to main also deploy that same image to Google Cloud once deploy/target.env exists (written
+# by deploy/gcp/setup.sh). The new version only gets traffic after it answers its health check, so a
+# broken build never replaces a working one.
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint and type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      # Route types (PageProps and friends) are generated, not committed.
+      - run: npx next typegen
+      - run: npx tsc --noEmit
+
+  ship:
+    name: Build, test, deploy
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: autodocs
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: autodocs
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U autodocs -d autodocs"
+          --health-interval 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read the deploy target
+        id: target
+        run: |
+          if [ -f deploy/target.env ] && [ "$GITHUB_REF" = refs/heads/main ] && [ "$GITHUB_EVENT_NAME" != pull_request ]; then
+            set -a; . deploy/target.env; set +a
+            for key in GCP_PROJECT GCP_REGION SERVICE WIF_PROVIDER DEPLOY_SA; do
+              [ -n "${!key:-}" ] || { echo "::error::deploy/target.env has no $key. Run deploy/gcp/setup.sh."; exit 1; }
+              echo "$key=${!key}" >> "$GITHUB_ENV"
+            done
+            echo "PUBLIC_URL=${PUBLIC_URL:-}" >> "$GITHUB_ENV"
+            echo "IMAGE=$GCP_REGION-docker.pkg.dev/$GCP_PROJECT/autodocs/autodocs:$GITHUB_SHA" >> "$GITHUB_ENV"
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Building and testing only (no deploy target, or not main)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: autodocs:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start it against Postgres and check the pages
+        run: |
+          docker run -d --name app --network host \
+            -e PORT=8080 -e HOSTNAME=127.0.0.1 \
+            -e DATABASE_URL=postgresql://autodocs:ci@127.0.0.1:5432/autodocs \
+            -e ADMIN_PASSWORD=ci-admin-password \
+            -e SESSION_SECRET=ci-session-secret-only-for-this-test \
+            -e PUBLIC_URL=http://docs.ci.test:8080 -e ADMIN_URL=http://admin.ci.test:8080 \
+            autodocs:ci
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/api/health >/dev/null 2>&1 && break; sleep 2; done
+          fail=0
+          expect() { # host path status [redirect]
+            out=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -H "Host: $1" "http://127.0.0.1:8080$2")
+            code=${out%% *}; to=${out#* }
+            if [ "$code" != "$3" ] || { [ -n "${4:-}" ] && [ "$to" != "$4" ]; }; then
+              echo "::error::$1$2 answered $out, expected $3 ${4:-}"; fail=1
+            else echo "ok  $1$2 → $out"; fi
+          }
+          # The Cloud Run address serves everything.
+          expect 127.0.0.1:8080 /api/health 200
+          expect 127.0.0.1:8080 / 200
+          expect 127.0.0.1:8080 /help 200
+          expect 127.0.0.1:8080 /login 200
+          expect 127.0.0.1:8080 /admin 307
+          expect 127.0.0.1:8080 /widget.js 200
+          expect 127.0.0.1:8080 /robots.txt 200
+          expect 127.0.0.1:8080 /sitemap.xml 200
+          expect 127.0.0.1:8080 /llms.txt 200
+          expect 127.0.0.1:8080 /.well-known/oauth-authorization-server 200
+          expect 127.0.0.1:8080 /welcome 200
+          expect 127.0.0.1:8080 /login/forgot 200
+          expect 127.0.0.1:8080 /invite/not-a-real-link 200
+          # The public and admin domains each serve their own half.
+          expect docs.ci.test:8080 /help 200
+          expect docs.ci.test:8080 /admin 307 http://admin.ci.test:8080/admin
+          expect docs.ci.test:8080 /login 307 http://admin.ci.test:8080/login
+          expect docs.ci.test:8080 /welcome 307 http://admin.ci.test:8080/welcome
+          expect docs.ci.test:8080 /invite/abc 307 http://admin.ci.test:8080/invite/abc
+          expect admin.ci.test:8080 / 307 http://admin.ci.test:8080/admin
+          expect admin.ci.test:8080 /help 307 http://docs.ci.test:8080/help
+          expect admin.ci.test:8080 /login 200
+          # Sign-in redirects stay on the visitor's address, never the container's own.
+          loc=$(curl -s -o /dev/null -D - -H "Host: admin.ci.test:8080" -H "X-Forwarded-Proto: https" http://127.0.0.1:8080/admin | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+          if [ "$loc" = "https://admin.ci.test:8080/login?next=%2Fadmin" ]; then echo "ok  /admin → $loc"; else echo "::error::/admin redirected to $loc"; fail=1; fi
+          # The screenshot browser starts inside the container.
+          docker exec app node -e "require('playwright').chromium.launch({args:['--no-sandbox']}).then(b=>b.close()).then(()=>console.log('ok  chromium starts'))" || { echo "::error::Chromium didn't start in the image"; fail=1; }
+          if [ "$fail" != 0 ]; then echo "--- app logs"; docker logs app 2>&1 | tail -80; fi
+          exit $fail
+
+      - name: Sign in to Google Cloud
+        if: steps.target.outputs.deploy == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+        if: steps.target.outputs.deploy == 'true'
+
+      - name: Push the image
+        if: steps.target.outputs.deploy == 'true'
+        run: |
+          gcloud auth configure-docker "$GCP_REGION-docker.pkg.dev" --quiet
+          docker tag autodocs:ci "$IMAGE"
+          docker push "$IMAGE"
+
+      - name: Deploy without traffic, check it, then switch over
+        if: steps.target.outputs.deploy == 'true'
+        run: |
+          TAG="c-${GITHUB_SHA::7}"
+          gcloud run deploy "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --image="$IMAGE" \
+            --no-traffic --tag="$TAG" \
+            --startup-probe=httpGet.path=/api/health,httpGet.port=8080,periodSeconds=5,timeoutSeconds=3,failureThreshold=36 \
+            --quiet
+          DESCRIBE=$(gcloud run services describe "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --format=json)
+          URL=$(jq -r --arg t "$TAG" '.status.traffic[] | select(.tag == $t) | .url' <<<"$DESCRIBE")
+          PREVIOUS=$(jq -r '[.status.traffic[] | select(.percent == 100)][0].revisionName // empty' <<<"$DESCRIBE")
+          INGRESS=$(jq -r '.metadata.annotations["run.googleapis.com/ingress"] // "all"' <<<"$DESCRIBE")
+          if [ "$INGRESS" = all ]; then
+            for i in $(seq 1 30); do curl -fsS "$URL/api/health" && break; sleep 4; done
+            curl -fsS "$URL/api/health" >/dev/null || { echo "::error::The new version isn't healthy; traffic stays on the old one."; exit 1; }
+            curl -fsS -o /dev/null "$URL/help" || { echo "::error::The new version's help center doesn't load; traffic stays on the old one."; exit 1; }
+          else
+            # The run.app address is closed to the internet (deploy/gcp/iap.sh lock), so the startup
+            # probe above is the pre-traffic check, and the public domain is checked after switching.
+            echo "Cloud Run ingress is $INGRESS; the revision passed its startup probe."
+          fi
+          gcloud run services update-traffic "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --to-latest --quiet
+          gcloud run services update-traffic "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --remove-tags="$TAG" --quiet
+          if [ "$INGRESS" != all ] && [[ "${PUBLIC_URL:-}" == https://* ]]; then
+            ok=0
+            for i in $(seq 1 15); do
+              curl -fsS "$PUBLIC_URL/api/health" >/dev/null && curl -fsS -o /dev/null "$PUBLIC_URL/help" && { ok=1; break; }
+              sleep 4
+            done
+            if [ "$ok" != 1 ]; then
+              [ -n "$PREVIOUS" ] && gcloud run services update-traffic "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --to-revisions="$PREVIOUS=100" --quiet
+              echo "::error::$PUBLIC_URL didn't answer after the switch; traffic is back on $PREVIOUS."
+              exit 1
+            fi
+          fi
+          LIVE=$(gcloud run services describe "$SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --format='value(status.url)')
+          {
+            echo "### Deployed ${GITHUB_SHA::7}"
+            echo "Live at $LIVE (and your domains, once they point here)."
+            echo "To roll back, re-run an earlier successful run of this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"

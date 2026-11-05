@@ -1,0 +1,7 @@
+# HTTPS in front of AutoDocs (docker compose --profile https). DOMAIN comes from .env: one address,
+# or two separated by a comma and a space for a separate admin address
+# (DOMAIN=docs.example.com, admin.docs.example.com).
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8080
+}
