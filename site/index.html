@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AutoDocs: a help center that keeps itself up to date</title>
+<meta name="description" content="AutoDocs is an open-source, self-hosted help center with an AI docs agent. When a pull request merges, it drafts the article changes; you review the diff and publish.">
+<meta property="og:title" content="AutoDocs">
+<meta property="og:description" content="A self-hosted help center that keeps itself up to date.">
+<meta property="og:image" content="images/help-center.png">
+<link rel="icon" href="images/docs-agent.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Petrona:opsz,wght@8..32,500;8..32,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff;
+    --mist: #f7f7f8;
+    --ink: #0a0d12;
+    --graphite: #535862;
+    --hairline: #e9eaeb;
+    --violet: #7f56d9;
+    --fur: #f3c98c;
+    --add-bg: #e8f6ee;
+    --add-ink: #05603a;
+    --del-bg: #fdeceb;
+    --del-ink: #a01b10;
+    --serif: "Petrona", Georgia, serif;
+    --sans: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img { max-width: 100%; height: auto; display: block; }
+  :focus-visible { outline: 2px solid var(--violet); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
+
+  /* Top bar */
+  .top { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; }
+  .brand img { width: 30px; height: 30px; }
+  .top nav { display: flex; align-items: center; gap: 26px; font-size: 15px; }
+  .top nav a { text-decoration: none; color: var(--graphite); }
+  .top nav a:hover { color: var(--ink); }
+  .top nav .gh { color: var(--ink); display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--hairline); padding: 7px 14px; border-radius: 999px; }
+  .top nav .gh:hover { border-color: #d5d7da; }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 64px; align-items: center; padding-block: 64px 88px; }
+  .eyebrow { font: 500 13px/1 var(--mono); color: var(--graphite); letter-spacing: .02em; margin: 0 0 22px; }
+  h1 { font: 600 clamp(40px, 4.9vw, 62px)/1.03 var(--serif); letter-spacing: -.025em; margin: 0 0 22px; }
+  h1 em { font-style: normal; color: var(--graphite); }
+  .lede { font-size: 19px; color: var(--graphite); margin: 0 0 32px; max-width: 34ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 500; text-decoration: none; transition: transform .15s var(--ease), background .15s; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.primary:hover { background: #22262f; }
+  .btn.quiet { border: 1px solid var(--hairline); }
+  .btn.quiet:hover { border-color: #d5d7da; }
+  .btn:active { transform: translateY(1px); }
+
+  /* The signature: a merged pull request becoming a reviewed article change */
+  .draft { background: var(--paper); border: 1px solid var(--hairline); border-radius: 18px; box-shadow: 0 1px 2px rgba(10,13,18,.04), 0 24px 48px -28px rgba(10,13,18,.28); overflow: hidden; }
+  .draft-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--hairline); background: var(--mist); }
+  .draft-head img { width: 30px; height: 30px; flex: none; }
+  .draft-head b { font-weight: 600; font-size: 14px; display: block; }
+  .draft-head span { font-size: 13px; color: var(--graphite); }
+  .pr { font-family: var(--mono); font-size: 12.5px; color: var(--ink); background: var(--paper); border: 1px solid var(--hairline); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  .draft-body { padding: 22px 24px 8px; }
+  .draft-title { font: 600 22px/1.25 var(--serif); margin: 0 0 14px; }
+  .line { display: grid; grid-template-columns: 22px 1fr; font-size: 15px; line-height: 1.55; padding: 5px 10px; margin: 0 -10px; border-radius: 8px; }
+  .line i { font-style: normal; font-family: var(--mono); color: #a4a7ae; font-size: 13px; padding-top: 1px; }
+  .line.del { background: var(--del-bg); color: var(--del-ink); }
+  .line.del i, .line.add i { color: inherit; }
+  .line.add { background: var(--add-bg); color: var(--add-ink); }
+  .line.del span { text-decoration: line-through; text-decoration-thickness: 1px; }
+  del { background: var(--del-bg); color: var(--del-ink); text-decoration: line-through; border-radius: 4px; padding: 0 2px; }
+  ins { background: var(--add-bg); color: var(--add-ink); text-decoration: none; border-radius: 4px; padding: 0 2px; }
+  .draft-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 18px; }
+  .draft-foot small { color: var(--graphite); font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 500; }
+  .pill.ok { background: var(--ink); color: #fff; }
+  .pill.ghost { border: 1px solid var(--hairline); color: var(--ink); }
+  .pills { display: flex; gap: 8px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .draft .del, .draft del { animation: mark .5s var(--ease) .5s backwards; }
+    .draft .add, .draft ins { animation: arrive .5s var(--ease) 1s backwards; }
+    .draft-foot .pill.ok { animation: arrive .4s var(--ease) 1.5s backwards; }
+  }
+  @keyframes mark { from { background: transparent; color: var(--ink); } }
+  @keyframes arrive { from { opacity: 0; transform: translateY(6px); } }
+
+  /* Sections */
+  section { padding: 88px 0; }
+  .band { background: var(--mist); }
+  h2 { font: 600 clamp(30px, 3.4vw, 40px)/1.1 var(--serif); letter-spacing: -.02em; margin: 0 0 14px; }
+  .sub { color: var(--graphite); font-size: 18px; max-width: 52ch; margin: 0 0 44px; }
+  .frame { border-radius: 14px; overflow: hidden; border: 1px solid var(--hairline); background: var(--paper); box-shadow: 0 30px 60px -40px rgba(10,13,18,.35); }
+  .frame .chrome { height: 36px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border-bottom: 1px solid var(--hairline); background: var(--mist); }
+  .frame .chrome span { width: 10px; height: 10px; border-radius: 50%; background: #dcdde0; }
+  .shot-hero { margin-top: -8px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .steps li { counter-increment: step; border-top: 1px solid var(--ink); padding-top: 18px; }
+  .steps li::before { content: counter(step); font: 500 13px/1 var(--mono); color: var(--graphite); display: block; margin-bottom: 14px; }
+  .steps h3 { font-size: 18px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 8px; }
+  .steps p { margin: 0; color: var(--graphite); }
+
+  .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; margin: 0; }
+  .features div { padding: 22px 0; border-top: 1px solid var(--hairline); }
+  .features dt { font-weight: 600; margin-bottom: 6px; }
+  .features dd { margin: 0; color: var(--graphite); }
+  .features code, p code { font: 13.5px var(--mono); background: var(--mist); border: 1px solid var(--hairline); padding: 1px 5px; border-radius: 5px; color: var(--ink); }
+
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+  figure { margin: 0; }
+  figcaption { font-size: 14px; color: var(--graphite); margin-top: 12px; }
+
+  .run { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; align-items: start; }
+  pre { margin: 0; background: var(--ink); color: #e6e7ea; border-radius: 14px; padding: 22px 24px; overflow-x: auto; font: 14px/1.75 var(--mono); }
+  pre .c { color: #8a8f99; }
+  .run p { color: var(--graphite); margin: 0 0 16px; }
+  .run ul { padding-left: 18px; color: var(--graphite); margin: 0; }
+  .run li { margin: 6px 0; }
+  .run a { color: var(--ink); text-underline-offset: 3px; }
+
+  footer { border-top: 1px solid var(--hairline); padding: 32px 0 48px; color: var(--graphite); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+  footer a { color: var(--ink); text-underline-offset: 3px; }
+
+  @media (max-width: 900px) {
+    .hero, .run { grid-template-columns: 1fr; gap: 44px; }
+    .hero { padding-block: 32px 64px; }
+    .steps, .pair { grid-template-columns: 1fr; gap: 28px; }
+    .features { grid-template-columns: 1fr; }
+    section { padding: 64px 0; }
+  }
+  @media (max-width: 520px) {
+    .top nav a:not(.gh) { display: none; }
+    .draft-foot { flex-direction: column; align-items: flex-start; }
+    .frame .chrome { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="./"><img src="images/docs-agent.svg" alt="">AutoDocs</a>
+  <nav aria-label="Main">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#run">Run it</a>
+    <a class="gh" href="https://github.com/deanayoung3-droid/autodocs"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <p class="eyebrow">Open source · MIT · Self-hosted</p>
+      <h1>Your code changed. <em>Your help center already knows.</em></h1>
+      <p class="lede">AutoDocs is a help center with an AI docs agent. When a pull request merges, the agent drafts the article changes. You review the diff and publish.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/deanayoung3-droid/autodocs">View on GitHub</a>
+        <a class="btn quiet" href="#run">Run it in 5 minutes</a>
+      </div>
+    </div>
+
+    <div class="draft" role="img" aria-label="Example: Docs Agent drafted a change to the article “Invite your team” after pull request 482 renamed Workspaces to Teams. The change is waiting for review.">
+      <div class="draft-head" aria-hidden="true">
+        <img src="images/docs-agent.svg" alt="">
+        <div><b>Docs Agent drafted a change</b><span>From <span class="pr">#482 Rename Workspaces to Teams</span></span></div>
+      </div>
+      <div class="draft-body" aria-hidden="true">
+        <p class="draft-title">Invite your team</p>
+        <div class="line"><i>1</i><span>Open <b>Settings → <del>Workspaces</del> <ins>Teams</ins> → Members</b>.</span></div>
+        <div class="line"><i>2</i><span>Click <b>Invite people</b> and paste their email addresses.</span></div>
+        <div class="line del"><i>−</i><span>Choose a role: Admin, Member, or Guest.</span></div>
+        <div class="line add"><i>+</i><span>Choose a role: Admin, Editor, or Viewer.</span></div>
+        <div class="line"><i>4</i><span>Invitations expire after 7 days.</span></div>
+      </div>
+      <div class="draft-foot" aria-hidden="true">
+        <small>2 changes · nothing publishes on its own</small>
+        <span class="pills"><span class="pill ghost">Edit</span><span class="pill ok">Publish</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap shot-hero">
+    <div class="frame">
+      <div class="chrome" aria-hidden="true"><span></span><span></span><span></span></div>
+      <img src="images/help-center.png" width="2880" height="1800" alt="An AutoDocs help center for a sample company, Acme: sections for Getting started, Billing, Integrations, and Account and security, with search at the top." loading="eager">
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sub">The agent does the reading and the first draft. You stay the editor.</p>
+      <ol class="steps">
+        <li><h3>A pull request merges</h3><p>Docs Agent reads it and decides whether customers will notice: a renamed button, a new setting, a changed limit.</p></li>
+        <li><h3>Docs Agent drafts the change</h3><p>It finds the articles that describe that part of the product, rewrites the steps, and takes fresh screenshots.</p></li>
+        <li><h3>You review and publish</h3><p>Every change waits for you as a diff. Edit it, publish it, or send it back with a note.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="features" class="band">
+    <div class="wrap">
+      <h2>Everything a help center needs</h2>
+      <p class="sub">White-label from the first page: readers see your name, logo, colours and domain.</p>
+      <dl class="features">
+        <div><dt>Help center</dt><dd>Sections and articles, search by keyword and meaning, AI answers with cited sources, feedback, translations, dark mode, and private docs.</dd></div>
+        <div><dt>Widget</dt><dd>One script tag adds search, AI answers and a contact form inside your own product.</dd></div>
+        <div><dt>Docs Agent</dt><dd>Drafts from merged pull requests, tasks you give it, and support questions. Runs scheduled audits and checks articles against your code.</dd></div>
+        <div><dt>Admin</dt><dd>An editor with live preview, a review queue with diffs, reporting on searches with no answer, and team accounts with roles.</dd></div>
+        <div><dt>Integrations</dt><dd>GitHub, Slack, Linear, 13 helpdesks for support signals, webhooks, a Chrome extension, and an MCP server for AI clients.</dd></div>
+        <div><dt>Import</dt><dd>Bring an existing help center over from its <code>llms.txt</code> or sitemap, with redirects from the old addresses.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What readers and editors see</h2>
+      <p class="sub">Shown with sample content for a made-up company, Acme.</p>
+    </div>
+    <div class="wrap pair">
+      <figure>
+        <div class="frame"><img src="images/article.png" width="2880" height="1800" alt="An article page: steps, a table of roles, a table of contents, and a “Was this helpful?” control." loading="lazy"></div>
+        <figcaption>Articles your readers can scan, with a table of contents and feedback on every page.</figcaption>
+      </figure>
+      <figure>
+        <div class="frame"><img src="images/admin-editor.png" width="2880" height="1800" alt="The admin: sections on the left and a live preview of the help center on the right." loading="lazy"></div>
+        <figcaption>The admin: arrange sections and see the help center exactly as readers will.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="run" class="band">
+    <div class="wrap run">
+      <div>
+        <h2>Run it in 5 minutes</h2>
+        <p>You need Node.js 24. The database is built in, so there's nothing else to install.</p>
+        <p><code>npm run setup</code> writes your secrets, asks for an OpenAI key (you can add it later), and prints a setup password. Sign in at <code>localhost:3000/login</code> and name your help center.</p>
+        <ul>
+          <li>On a server: <a href="https://github.com/deanayoung3-droid/autodocs/blob/main/docs/self-hosting.md">Docker with automatic HTTPS</a></li>
+          <li>On Google Cloud: <a href="https://github.com/deanayoung3-droid/autodocs/blob/main/deploy/AGENT-SETUP.md">Cloud Run and Cloud SQL</a></li>
+          <li>After that: <a href="https://github.com/deanayoung3-droid/autodocs/blob/main/docs/first-steps.md">first steps</a></li>
+        </ul>
+      </div>
+<pre><code>git clone https://github.com/deanayoung3-droid/autodocs.git
+cd autodocs
+npm install
+npm run setup   <span class="c"># secrets, OpenAI key, setup password</span>
+npm run dev     <span class="c"># http://localhost:3000</span></code></pre>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>AutoDocs is open source under the MIT license.</span>
+    <span><a href="https://github.com/deanayoung3-droid/autodocs">GitHub</a> · Also by Dean Young: <a href="https://deanayoung3-droid.github.io/lex/">Lex, an AI assistant for your website</a></span>
+  </div>
+</footer>
+</body>
+</html>
