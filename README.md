@@ -22,7 +22,7 @@ It's white-label: readers see your name, logo, colours, and domain. Nothing says
 You need [Node.js 24](https://nodejs.org) or newer. Nothing else: a database is built in.
 
 ```bash
-git clone https://github.com/DeanYoung1/autodocs.git
+git clone https://github.com/deanayoung3-droid/autodocs.git
 cd autodocs
 npm install
 npm run setup
