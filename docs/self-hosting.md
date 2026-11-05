@@ -13,7 +13,7 @@ The simplest way to run AutoDocs for real: one server, Docker, and a domain. Pos
 On the server:
 
 ```bash
-git clone https://github.com/YOUR-ACCOUNT/autodocs.git
+git clone https://github.com/DeanYoung1/autodocs.git
 cd autodocs
 ```
 
